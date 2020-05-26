@@ -1,0 +1,13 @@
+{
+    "dragen_aggregate_gvcfs.dragen_container": "/re_gecip/BRS/singularity_containers/dragen_gvcfgenotyper_beta.sif",
+    "dragen_aggregate_gvcfs.singularity_module": "module load singularity/3.2.1", 
+    "dragen_aggregate_gvcfs.reference": "/genomes/resources/genomeref/data/human/GRCh38DeAlt_HLA/GRCh38_full_analysis_set_plus_decoy_hla.fa",
+    "dragen_aggregate_gvcfs.dragen_hash_table": "/genomes/analysis/Validation/RareDisease/dragen/hash_tables/GRCh38_full_analysis_set_plus_decoy_hla.bwa-kit_hs38DH_liftover.Dragen_3.2.22/",
+    "dragen_aggregate_gvcfs.gvcf_lines": 2,
+    "dragen_aggregate_gvcfs.max_alleles": 50,
+    "dragen_aggregate_gvcfs.threads": 1,
+
+    "dragen_aggregate_gvcfs.gvcf_list": "/re_gecip/BRS/dragen_aggregation_testing/resources/Ashkenazim_genomes.txt",
+    "dragen_aggregate_gvcfs.regions_file": "/re_gecip/BRS/dragen_aggregation_testing/resources/V8_aggregation_regions_file.txt",
+    "dragen_aggregate_gvcfs.joint_call": "false"
+}

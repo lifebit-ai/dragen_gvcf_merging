@@ -1,0 +1,9 @@
+{
+    "final_workflow_outputs_dir": "/weka/re_gecip/BRS/release_8_aggregation/workflow_output/data",
+    "use_relative_output_paths": "False",
+    "final_workflow_log_dir": "/weka/re_gecip/BRS/release_8_aggregation/workflow_output/workflow_logs",
+    "final_call_logs_dir": "/weka/re_gecip/BRS/release_8_aggregation/workflow_output/call_logs",
+    "maxRetries": 5,
+    "write_to_cache": true,
+    "read_from_cache": true
+}
