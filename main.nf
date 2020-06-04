@@ -44,8 +44,7 @@ process first_joint_aggregation {
     // ulimit -n 65535
     """
     ulimit -a
-
-    cat $gvcf_subset
+    cat ${gvcf_subset} | awk -F'/' '{print \$NF}' > local_vcfs.txt
 
     dragen --sw-mode \
      --enable-gvcf-genotyper=true \
@@ -54,7 +53,7 @@ process first_joint_aggregation {
      --gg-enable-indexing=true \
      --output-directory . \
      --output-file-prefix ${gvcf_subset_name}_${fixed_region}_first_aggregation \
-     --variant-list ${gvcf_subset} \
+     --variant-list local_vcfs.txt \
      --ht-reference ${reference} \
      --gg-max-alternate-alleles ${max_alleles} \
      --gg-regions ${region} \
