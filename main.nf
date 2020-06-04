@@ -44,8 +44,8 @@ process first_joint_aggregation {
     // ulimit -n 65535
     """
     ulimit -a
-    echo \$PATH
-    ls -lh /dragen-softwaremode-3.6.1-14-g614dc51cD.el7.x86_64/bin
+
+    cat $gvcf_subset
 
     dragen --sw-mode \
      --enable-gvcf-genotyper=true \
