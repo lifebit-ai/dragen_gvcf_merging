@@ -47,8 +47,8 @@ process first_joint_aggregation {
         gvcf_file="\${gvcfs[\$i]}"
         name="\${names[\$i]}"
         tabix -h \$gvcf_file ${region} | \
-        bcftools view -Oz -o ${name}_${fixed_region}_extract_for_dragen.vcf.gz
-        bcftools index ${name}_${fixed_region}_extract_for_dragen.vcf.gz
+        bcftools view -Oz -o \${name}_${fixed_region}_extract_for_dragen.vcf.gz
+        bcftools index \${name}_${fixed_region}_extract_for_dragen.vcf.gz
     done
 
     # Run first joint aggregation
@@ -138,8 +138,8 @@ process second_joint_aggregation {
         gvcf_file="\${gvcfs[\$i]}"
         name="\${names[\$i]}"
         tabix -h \$gvcf_file ${region} | \
-        bcftools view -Oz -o ${name}_${fixed_region}_extract_for_dragen.vcf.gz
-        bcftools index ${name}_${fixed_region}_extract_for_dragen.vcf.gz
+        bcftools view -Oz -o \${name}_${fixed_region}_extract_for_dragen.vcf.gz
+        bcftools index \${name}_${fixed_region}_extract_for_dragen.vcf.gz
     done
 
     # Run second joint aggregation
