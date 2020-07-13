@@ -14,36 +14,8 @@ Channel
     .fromPath(params.reference)
     .into{ first_joint_aggregation_reference; merge_consensus_sites_reference; second_joint_aggregation_reference }
 
-read_from_s3_channel = read_regions_from_s3
-    .combine(region)
-
-// Parallel for every gVCF and every region (regions * samples tasks)
-process read_regions_from_s3 {
-    cpus 1
-    memory "1 GB"
-
-    input: 
-        tuple val(gvcf_file), val(gvcf_file_index), val(region) from read_from_s3_channel
-    output:
-        tuple val(region), file("${name}_${fixed_region}_extract_for_dragen.vcf.gz"), file("${name}_${fixed_region}_extract_for_dragen.vcf.gz.csi") into stage_files_for_aggregation
-    
-    script:
-    region = region.replaceAll(/\n/, "")
-    fixed_region = region.replaceAll(/[:-]/, "_").replaceAll(/\n/, "")
-    name = gvcf_file.substring( gvcf_file.lastIndexOf('/')+1, gvcf_file.length()).replaceAll(".gvcf.gz", "")
-    """
-    set -e
-
-    tabix -h ${gvcf_file} \
-     ${region} | \
-    bcftools view -Oz \
-     -o ${name}_${fixed_region}_extract_for_dragen.vcf.gz
-    
-    bcftools index ${name}_${fixed_region}_extract_for_dragen.vcf.gz
-    """
-}
-
-stage_files_for_aggregation
+region
+    .combine(read_regions_from_s3)
     .groupTuple(size: params.sample_batch_size, remainder: true)
     .into { first_aggregation_extracted_regions; second_aggregation_extracted_regions }
 
@@ -54,18 +26,33 @@ process first_joint_aggregation {
 
     input:
         each file(reference) from first_joint_aggregation_reference
-        tuple val(region), file(first_aggregation_subset), file(index) from first_aggregation_extracted_regions
+        tuple val(region), val(first_aggregation_subset), val(index) from first_aggregation_extracted_regions
     output:
         tuple val(region), file("${fixed_region}_first_aggregation.vcf.gz") into sample_consensus_sites
     
     script:   
     region = region.replaceAll(/\n/, "")
     fixed_region = region.replaceAll(/[:-]/, "_").replaceAll(/\n/, "")
+    names = []
+    first_aggregation_subset.each { gvcf_file ->
+        names.add(gvcf_file.substring( gvcf_file.lastIndexOf('/')+1, gvcf_file.length()).replaceAll(".gvcf.gz", ""))
+    }
     """
     set -e
 
-    echo "${first_aggregation_subset.join("\n")}" > ${fixed_region}_gvcf_list
+    # Read regions from S3
+    gvcfs=(${first_aggregation_subset.join(' ')})
+    names=(${names.join(' ')})
+    for i in "\${!gvcfs[@]}"; do
+        gvcf_file="\${gvcfs[\$i]}"
+        name="\${names[\$i]}"
+        tabix -h \$gvcf_file ${region} | \
+        bcftools view -Oz -o \${name}_${fixed_region}_extract_for_dragen.vcf.gz
+        bcftools index \${name}_${fixed_region}_extract_for_dragen.vcf.gz
+    done
 
+    # Run first joint aggregation
+    ls *extract_for_dragen.vcf.gz > ${fixed_region}_gvcf_list
     dragen --sw-mode \
      --enable-gvcf-genotyper=true \
      --enable-map-align=false \
@@ -128,7 +115,7 @@ process second_joint_aggregation {
     memory "30 GB"
 
     input:
-        tuple val(region), file(second_aggregation_subset), file(second_aggregation_subset_index), file(merged_consensus_sites), file(merged_consensus_sites_index) from second_aggregation_items
+        tuple val(region), val(second_aggregation_subset), val(second_aggregation_subset_index), file(merged_consensus_sites), file(merged_consensus_sites_index) from second_aggregation_items
         each file(reference) from second_joint_aggregation_reference
 
     output:
@@ -137,11 +124,26 @@ process second_joint_aggregation {
     script:
     region = region.replaceAll(/\n/, "")
     fixed_region = region.replaceAll(/[:-]/, "_").replaceAll(/\n/, "")
+    names = []
+    second_aggregation_subset.each { gvcf_file ->
+        names.add(gvcf_file.substring( gvcf_file.lastIndexOf('/')+1, gvcf_file.length()).replaceAll(".gvcf.gz", ""))
+    }
     """
     set -e
 
-    echo "${second_aggregation_subset.join("\n")}" > ${fixed_region}_gvcf_list
+    # Read regions from S3
+    gvcfs=(${second_aggregation_subset.join(' ')})
+    names=(${names.join(' ')})
+    for i in "\${!gvcfs[@]}"; do
+        gvcf_file="\${gvcfs[\$i]}"
+        name="\${names[\$i]}"
+        tabix -h \$gvcf_file ${region} | \
+        bcftools view -Oz -o \${name}_${fixed_region}_extract_for_dragen.vcf.gz
+        bcftools index \${name}_${fixed_region}_extract_for_dragen.vcf.gz
+    done
 
+    # Run second joint aggregation
+    ls *extract_for_dragen.vcf.gz > ${fixed_region}_gvcf_list
     dragen --sw-mode \
      --enable-gvcf-genotyper=true \
      --enable-map-align=false \
