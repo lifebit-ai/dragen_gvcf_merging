@@ -9,6 +9,7 @@ Channel
 Channel
     .fromPath(params.regions_file)
     .splitText()
+    .map { it -> it.trim() }
     .set{ region }
 Channel
     .fromPath(params.reference)
